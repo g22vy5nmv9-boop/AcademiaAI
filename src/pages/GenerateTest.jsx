@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+// import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -118,8 +118,8 @@ export default function GenerateTest() {
 
   const loadMaterials = async () => {
     try {
-      const currentUser = await base44.auth.me();
-      const data = await base44.entities.StudyMaterial.filter({ created_by: currentUser.email });
+   //   const currentUser = await base44.auth.me();
+ //     const data = await base44.entities.StudyMaterial.filter({ created_by: currentUser.email });
       setMaterials(data || []);
     } catch (error) {
       // Silently handle error - user will see empty state
@@ -129,8 +129,8 @@ export default function GenerateTest() {
 
   const loadTests = async () => {
     try {
-      const currentUser = await base44.auth.me();
-      const data = await base44.entities.TestSession.filter({ created_by: currentUser.email }, "-created_date");
+  //    const currentUser = await base44.auth.me();
+  //    const data = await base44.entities.TestSession.filter({ created_by: currentUser.email }, "-created_date");
       const completedTests = (data || []).filter((t) => t.completed);
       setTests(completedTests);
     } catch (error) {
@@ -155,7 +155,7 @@ export default function GenerateTest() {
     // actualNumQuestions is already available via useMemo
 
     try {
-      const response = await base44.integrations.Core.InvokeLLM({
+  //    const response = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an AI teaching assistant helping students create practice tests.
 
 ${materialsContext}
@@ -477,12 +477,18 @@ CRITICAL MULTIPLE CHOICE RULES:
     };
 
     try {
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false,
-        response_json_schema: schema
-      });
-
+  try {
+  const result = {
+    questions: [
+      {
+        question: "Sample question (Base44 removed)",
+        question_type: selectedFormats[0] || "multiple-choice",
+        concept_explanation: "This is a placeholder explanation.",
+        correct_answer: "A",
+        choices: ["A", "B", "C", "D"],
+      },
+    ],
+  };
       if (!result || !result.questions || !Array.isArray(result.questions) || result.questions.length < 1) {
         throw new Error(`The AI couldn't generate questions from your materials. Try selecting different materials or reducing the number of questions.`);
       }
@@ -496,7 +502,7 @@ CRITICAL MULTIPLE CHOICE RULES:
       // Randomize the order of questions
       const randomizedQuestions = [...questionsToUse].sort(() => Math.random() - 0.5);
 
-      const testSession = await base44.entities.TestSession.create({
+    //  const testSession = await base44.entities.TestSession.create({
         title: `${subjectsText || "Mixed"} - ${GRADE_LEVELS[gradeLevel]} Test`,
         subject: subjectsText || "Mixed",
         grade_level: GRADE_LEVELS[gradeLevel],
@@ -549,13 +555,18 @@ CRITICAL MULTIPLE CHOICE RULES:
     if (!testToDelete) return;
     
     try {
-      await base44.entities.TestSession.delete(testToDelete.id);
-      await loadTests();
-      setDeleteDialogOpen(false);
-      setTestToDelete(null);
-    } catch (error) {
-      console.log("Error deleting test");
-    }
+   // try {
+  // ---- BASE44 DISABLED: fake delete action ----
+  console.log("Test deleted (placeholder, Base44 removed)");
+
+  // refresh UI as if delete succeeded
+  await loadTests();
+  setDeleteDialogOpen(false);
+  setTestToDelete(null);
+
+} catch (error) {
+  console.log("Error deleting test");
+}
   };
 
   const handleRedoWrong = async (test) => {
@@ -566,7 +577,7 @@ CRITICAL MULTIPLE CHOICE RULES:
       return;
     }
 
-    const newTest = await base44.entities.TestSession.create({
+  //  const newTest = await base44.entities.TestSession.create({
       title: `${test.title} - Retry Wrong Answers`,
       subject: test.subject,
       grade_level: test.grade_level,
